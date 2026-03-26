@@ -37,6 +37,11 @@
 # MAGIC
 # MAGIC **https://github.com/zsivany/oe_labs.git**
 # MAGIC
+# MAGIC 1. Create new git folder:
+# MAGIC ![create git folder](/Workspace/Users/tamaspapp84@gmail.com/oe_labs/images/git_folder.png)
+# MAGIC
+# MAGIC 2. Add git repo link:
+# MAGIC ![create git repo](/Workspace/Users/tamaspapp84@gmail.com/oe_labs/images/git_repo.png)
 # MAGIC
 # MAGIC ##Alternative way to get the Lab material:
 # MAGIC **Import the dbc file from the Moodle:**
