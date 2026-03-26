@@ -74,8 +74,7 @@
 # MAGIC #<img src="https://miro.medium.com/max/1400/1*Ce0ZFSrXXhR4XrKlRodZUg.png"/></a> #
 # MAGIC
 # MAGIC **Related buzzwords:** 
-# MAGIC *DAG (Logical Plan), Physical Plan, Optimzers: (Catalyst, Tungsten, Photon) Parallel/Distributed processing, Shuffle, Scheduling Methods, Cluster, Driver, Executor, Cores (Slot), Partitions (parallelism), ScaleUp/ScaleOut*
-# MAGIC
+# MAGIC *DAG (Logical Plan), Physical Plan, Optimizers: (Catalyst, Tungsten, Photon) Parallel/Distributed processing, Shuffle, Scheduling Methods, Cluster, Driver, Executor, Cores (Slot), Partitions (parallelism), ScaleUp/ScaleOut*
 
 # COMMAND ----------
 
@@ -149,12 +148,12 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ##Pyspark Dataframes vs Pandas Dataframes
+# MAGIC ##PySpark Dataframes vs Pandas Dataframes
 # MAGIC #
 # MAGIC * Main differences:
 # MAGIC    * Evaluation (Lazy vs Eager)
-# MAGIC    * Opearational environment (Cluster vs Single)
-# MAGIC    * Muatability (Immutable vs Mutable)
+# MAGIC    * Operational environment (Cluster vs Single)
+# MAGIC    * Mutability (Immutable vs Mutable)
 
 # COMMAND ----------
 
@@ -260,7 +259,7 @@
 # MAGIC * **Java** - (Not directly -- need hack)
 # MAGIC * **SQL** - Closer to ANSI SQL 2003 compliance
 # MAGIC
-# MAGIC *Remark: With the DataFrames API, the performance differences between languages are nearly nonexistence (especially for Scala, Java & Python).*
+# MAGIC *Remark: With the DataFrames API, the performance differences between languages are nearly nonexistent (especially for Scala, Java & Python).*
 # MAGIC
 # MAGIC *On Serverless compute only Pyspark and SQL are available*
 
@@ -427,9 +426,9 @@ display(df)
 # MAGIC ##Unity Catalog
 # MAGIC
 # MAGIC * Centralized Data Repository
-# MAGIC * Governancae and security
+# MAGIC * Governance and security
 # MAGIC * Lineage and discovery
-# MAGIC * Manage the file interacions (local and remote) (Local: DBFS - distbributed file system for Databricks )
+# MAGIC * Manage the file interactions (local and remote) (Local: DBFS - distributed file system for Databricks )
 # MAGIC
 # MAGIC
 # MAGIC
@@ -523,7 +522,7 @@ csv_path = '/Volumes/workspace/default/user/Free_Test_Data_500KB_CSV-1.csv'
 # MAGIC
 # MAGIC Example steps:
 # MAGIC   - Create own folder(s)
-# MAGIC   - Execute some fs opearations 
+# MAGIC   - Execute some fs operations 
 
 # COMMAND ----------
 
@@ -539,31 +538,53 @@ csv_path = '/Volumes/workspace/default/user/Free_Test_Data_500KB_CSV-1.csv'
 # MAGIC %md
 # MAGIC ## 🌐 Other Data Platforms
 # MAGIC
-# MAGIC <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: center;">
+# MAGIC Explore other popular data platforms and tools in the modern data ecosystem:
 # MAGIC
-# MAGIC   <div style="text-align: center;">
-# MAGIC     <img src="https://miro.medium.com/v2/resize:fit:654/1*m1yj2VxL-Rp3aqkCzJEdVg.png" width="250" height="250"/>
-# MAGIC     <div style="font-size: 16px; margin-top: 8px;">AWS Glue</div>
+# MAGIC <div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; align-items: center; margin-top: 20px;">
+# MAGIC
+# MAGIC   <div style="text-align: center; width: 200px;">
+# MAGIC     <a href="https://aws.amazon.com/glue/" target="_blank" style="text-decoration: none; color: inherit;">
+# MAGIC       <img src="https://miro.medium.com/v2/resize:fit:654/1*m1yj2VxL-Rp3aqkCzJEdVg.png" 
+# MAGIC            width="200" height="200" 
+# MAGIC            style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"/>
+# MAGIC       <div style="font-size: 16px; margin-top: 10px; font-weight: 500;">AWS Glue</div>
+# MAGIC     </a>
 # MAGIC   </div>
 # MAGIC
-# MAGIC   <div style="text-align: center;">
-# MAGIC     <img src="https://www.optimusinfo.com/wp-content/uploads/2020/09/synapse-case-case.png" width="250" height="250"/>
-# MAGIC     <div style="font-size: 16px; margin-top: 8px;">Azure Synapse</div>
+# MAGIC   <div style="text-align: center; width: 200px;">
+# MAGIC     <a href="https://azure.microsoft.com/en-us/products/synapse-analytics" target="_blank" style="text-decoration: none; color: inherit;">
+# MAGIC       <img src="https://www.optimusinfo.com/wp-content/uploads/2020/09/synapse-case-case.png" 
+# MAGIC            width="200" height="200" 
+# MAGIC            style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"/>
+# MAGIC       <div style="font-size: 16px; margin-top: 10px; font-weight: 500;">Azure Synapse</div>
+# MAGIC     </a>
 # MAGIC   </div>
 # MAGIC
-# MAGIC   <div style="text-align: center;">
-# MAGIC     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGtsjtT26xLbvGO_eRAcJJ2drgv6wC9S7REQ&s" width="250" height="250"/>
-# MAGIC     <div style="font-size: 16px; margin-top: 8px;">Snowflake</div>
+# MAGIC   <div style="text-align: center; width: 200px;">
+# MAGIC     <a href="https://www.snowflake.com/" target="_blank" style="text-decoration: none; color: inherit;">
+# MAGIC       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGtsjtT26xLbvGO_eRAcJJ2drgv6wC9S7REQ&s" 
+# MAGIC            width="200" height="200" 
+# MAGIC            style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"/>
+# MAGIC       <div style="font-size: 16px; margin-top: 10px; font-weight: 500;">Snowflake</div>
+# MAGIC     </a>
 # MAGIC   </div>
 # MAGIC
-# MAGIC   <div style="text-align: center;">
-# MAGIC     <img src="https://cyprusshippingnews.com/wp-content/uploads/2024/09/Palantir-Logo-New.jpg" width="250" height="250"/>
-# MAGIC     <div style="font-size: 16px; margin-top: 8px;">Palantir</div>
+# MAGIC   <div style="text-align: center; width: 200px;">
+# MAGIC     <a href="https://www.palantir.com/" target="_blank" style="text-decoration: none; color: inherit;">
+# MAGIC       <img src="https://cyprusshippingnews.com/wp-content/uploads/2024/09/Palantir-Logo-New.jpg" 
+# MAGIC            width="200" height="200" 
+# MAGIC            style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"/>
+# MAGIC       <div style="font-size: 16px; margin-top: 10px; font-weight: 500;">Palantir</div>
+# MAGIC     </a>
 # MAGIC   </div>
 # MAGIC
-# MAGIC   <div style="text-align: center;">
-# MAGIC     <img src="https://cdn.plainconcepts.com/wp-content/uploads/2024/09/Microsoft-Fabric-and-Telcos.png" width="250" height="250"/>
-# MAGIC     <div style="font-size: 16px; margin-top: 8px;">Microsoft Fabric</div>
+# MAGIC   <div style="text-align: center; width: 200px;">
+# MAGIC     <a href="https://www.microsoft.com/en-us/microsoft-fabric" target="_blank" style="text-decoration: none; color: inherit;">
+# MAGIC       <img src="https://cdn.plainconcepts.com/wp-content/uploads/2024/09/Microsoft-Fabric-and-Telcos.png" 
+# MAGIC            width="200" height="200" 
+# MAGIC            style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"/>
+# MAGIC       <div style="font-size: 16px; margin-top: 10px; font-weight: 500;">Microsoft Fabric</div>
+# MAGIC     </a>
 # MAGIC   </div>
 # MAGIC
 # MAGIC </div>
@@ -580,7 +601,7 @@ csv_path = '/Volumes/workspace/default/user/Free_Test_Data_500KB_CSV-1.csv'
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ##More Databrikcs Stuff
+# MAGIC ##More Databricks Stuff
 # MAGIC    * <a href="https://www.databricks.com/product/databricks-sql" target="_blank">Databricks Warehouse (BI) Components</a>
 # MAGIC    * <a href="https://www.databricks.com/blog/2022/05/10/introducing-databricks-workflows.html">Databricks ETL processes</a>
 # MAGIC    * <a href="https://www.databricks.com/blog/2023/03/24/hello-dolly-democratizing-magic-chatgpt-open-models.html">Hello Dolly (ChatGPT)</a>
