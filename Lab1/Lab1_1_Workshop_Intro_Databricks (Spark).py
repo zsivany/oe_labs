@@ -187,7 +187,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC <h2 style="text-align: center;">Lakehouse - Medallion architecture</h2> 
+# MAGIC <h2 style="text-align: center;">Lakehouse - Medallion architecture (multi-hop approach)</h2> 
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
 # MAGIC   <img src="https://databricks.com/wp-content/uploads/2019/08/Delta-Lake-Multi-Hop-Architecture-Bronze.png" alt="LakeHouse" style="width: 600px height: 600px">
@@ -340,7 +340,6 @@
 #Challenge
 # print something
 
-print("helloworld")
 
 # COMMAND ----------
 
@@ -348,7 +347,6 @@ print("helloworld")
 #Challenge
 #TODO
 # some calculation
-1+2
 
 # COMMAND ----------
 
@@ -356,12 +354,10 @@ print("helloworld")
 #TODO
 # assign some variables
 
-x = 4
-print(x)
 
 # COMMAND ----------
 
-#TOD
+#TODO
 # Check the variables values
 
 
@@ -376,7 +372,7 @@ import pyspark.sql.functions as F
 # Analyze the jobs and outputs (Refer the Spark execution!) --> no sign in Serverless
 # Check How many jobs/stages created? --> no sign in Serverless
 # Check the Performance of menu.
-# Check the Visulaization menu.
+# Check the Visualization menu.
 # Check the display funcionalities! Discuss about the display built-in Databricks function!
 # Check Data Assistant capabilities!
 #
@@ -496,14 +492,13 @@ display(dbutils.fs.ls("/Volumes/workspace/default/user/"))
 #Challenge
 #TODO
 csv_path = '/Volumes/workspace/default/user/Free_Test_Data_500KB_CSV-1.csv'
-csv_df = spark.read.format("csv").option("header", "true").option("inferSchema", "true").load(csv_path)
-display(csv_df)
 
 # COMMAND ----------
 
 # MAGIC %sh 
 # MAGIC #Challenge
 # MAGIC #Check csv file content in shell
+# MAGIC #hint: use head -n command
 
 # COMMAND ----------
 
