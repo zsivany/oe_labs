@@ -26,13 +26,21 @@
 # MAGIC ##Check the account! Free version will be used in the lab
 # MAGIC ##https://login.databricks.com/
 # MAGIC
-# MAGIC
-# MAGIC ###Import the dbc file from the Moodle: 
-# MAGIC ###`Lab1_1_Workshop_Intro_Databricks (Spark).dbc`
-# MAGIC
 # MAGIC *Beware! MFA authentication! Use valid email address.*
 # MAGIC
-# MAGIC  *legacy community link (sundown in 2025): https://community.cloud.databricks.com/login.html*
+# MAGIC  *legacy Databricks Community Edition closed in 2025*
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #Import Lab exercise from the git:
+# MAGIC
+# MAGIC **https://github.com/zsivany/oe_labs.git**
+# MAGIC
+# MAGIC
+# MAGIC ##Alternative way to get the Lab material:
+# MAGIC **Import the dbc file from the Moodle:**
+# MAGIC **`Lab1_1_Workshop_Intro_Databricks (Spark).dbc`**
 
 # COMMAND ----------
 
