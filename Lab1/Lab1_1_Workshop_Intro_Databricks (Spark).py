@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "4"
+# ///
 # MAGIC %md
 # MAGIC ###Databricks intro
 # MAGIC #<img src="https://img.stackshare.io/service/10345/ADB.png"/></a> Workshop - Databricks (Spark)#
@@ -235,7 +239,7 @@
 # MAGIC * AI/BI  (Genie)
 # MAGIC * AI/ML - Mosaic AI
 # MAGIC * Data Governance - Unity Catalog
-# MAGIC * Databricks Assistant (LLM Chatbot)
+# MAGIC * Databricks Assistant - Genie (LLM Chatbot)
 # MAGIC * Managed Compute (Spark/Warehouse) environment
 
 # COMMAND ----------
@@ -346,6 +350,8 @@
 #Challenge
 #TODO
 # some calculation
+
+
 
 # COMMAND ----------
 
