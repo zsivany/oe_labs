@@ -89,7 +89,7 @@
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC <a href="https://media.licdn.com/dms/image/v2/D5622AQGcgGYj7pvb5A/feedshare-shrink_800/feedshare-shrink_800/0/1698408272546?e=1762992000&v=beta&t=ymwa5AoGPJZx7Eutz_s_f9S2uy3uU9kMhyN7SB85FAg" target="_blank">Animation link</a>
+# MAGIC <a href="https://media.licdn.com/dms/image/v2/D5622AQGcgGYj7pvb5A/feedshare-shrink_800/feedshare-shrink_800/0/1698408272546?e=1778112000&v=beta&t=fsTVHL4XZ5eHWE053HXa1vn4VN5PtNNbaj_J0sbGTQ8" target="_blank">Animation link</a>
 
 # COMMAND ----------
 
@@ -222,7 +222,7 @@
 # MAGIC Old:
 # MAGIC
 # MAGIC *"Databricks is a fully-managed version of the open-source Apache Spark analytics and data processing engine. Databricks is an enterprise-grade and secure cloud-based big data processing and machine learning platform.*
-# MAGIC *Databricks provides a notebook-oriented Apache Spark as-a-service workspace environment, making it easy to manage clusters and explore data interactively."* --> till last year
+# MAGIC *Databricks provides a notebook-oriented Apache Spark as-a-service workspace environment, making it easy to manage clusters and explore data interactively."* --> till year 2024
 # MAGIC
 # MAGIC New:
 # MAGIC
@@ -340,8 +340,13 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Cell 24
 #Challenge
 # print something
+
+print("Hello World")
+
+
 
 
 # COMMAND ----------
@@ -351,20 +356,21 @@
 #TODO
 # some calculation
 
-
+1+2
 
 # COMMAND ----------
 
 #Challenge
 #TODO
 # assign some variables
-
+x = 1
+x
 
 # COMMAND ----------
 
 #TODO
 # Check the variables values
-
+x
 
 # COMMAND ----------
 
@@ -381,14 +387,12 @@ import pyspark.sql.functions as F
 # Check the display funcionalities! Discuss about the display built-in Databricks function!
 # Check Data Assistant capabilities!
 #
+platforms = [("dbx", "python", "++"),("fabric", "scala", "+++"), ("gcp", "bigquery", "+++")]
+schema = ["platform", "language", "rating"]
 
-cars = [('ford', 'blue', 13),('fiat', 'red', 4)]
-schema = ['cartype', 'color', 'age']
+simple_df = spark.createDataFrame(data=platforms, schema=schema)
 
-df = spark.createDataFrame(cars, schema)
-display(df)
-
-
+simple_df.display()
 
 # COMMAND ----------
 
@@ -461,7 +465,7 @@ display(spark.sql("SHOW SCHEMAS IN samples"))
 
 # COMMAND ----------
 
-dbutils.fs.ls('/databricks-datasets/songs/data-001/')
+display(dbutils.fs.ls('/databricks-datasets/songs/data-001/'))
 
 # COMMAND ----------
 
@@ -471,8 +475,10 @@ dbutils.fs.ls('/databricks-datasets/songs/data-001/')
 
 # COMMAND ----------
 
-# Trick
-ls /Volumes/workspace/default/user/
+# DBTITLE 1,Cell 39
+# MAGIC %fs
+# MAGIC ls /Volumes/workspace/default/user/
+# MAGIC
 
 # COMMAND ----------
 
@@ -494,7 +500,8 @@ display(dbutils.fs.ls("/Volumes/workspace/default/user/"))
 
 # COMMAND ----------
 
-#Challenge
+#Challenge 
+# Load into dataframe the csv file
 #TODO
 csv_path = '/Volumes/workspace/default/user/Free_Test_Data_500KB_CSV-1.csv'
 

@@ -3,8 +3,9 @@
 # MAGIC #<img src="https://databricks.gallerycdn.vsassets.io/extensions/databricks/databricks/2.10.3/1756387992215/Microsoft.VisualStudio.Services.Icons.Default"/></a> Workshop Lab 2 - Databricks#
 # MAGIC **Content**
 # MAGIC   * Spark DataFrame operations
-# MAGIC   * Partitions example
+# MAGIC   * Native Spark functions vs UDF performance benchmark
 # MAGIC   * Delta Parquet (features) - Base of the Lakehouse architecture
+# MAGIC   * Partitions
 # MAGIC   * Tuning / Optimization
 
 # COMMAND ----------
@@ -29,24 +30,20 @@ from pyspark.sql.window import Window
 # COMMAND ----------
 
 # Read the dataset into the parquet_df variable
+# Use Moodle or Git: https://github.com/zsivany/oe_labs/blob/main/Lab2/Lab_2-userdata1.parquet 
+# Alternative link:  https://github.com/zsivany/oe_labs/raw/refs/heads/main/Lab2/Lab_2-userdata1.parquet
 # Use your own path
 parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/Lab_2-userdata1.parquet')
-
 
 # COMMAND ----------
 
 # Challenge
 # Check the schema of the datafrme
-parquet_df.limit(21).display()
-
-
 
 # count the dataframe to get some pict about the data
-#parquet_df.display()
 
 
 # Display some selected columns and filter on the dataframe and limit it to 20 rows
-
 
 
 
@@ -60,12 +57,15 @@ parquet_df.limit(21).display()
 # Challenge
 # Show how many records by country, descreasing order
 # Question: What is Finland's ranking in this order? (Not the count value itself)
-parquet_df.groupBy('country').count().orderBy(F.desc('count')).display()
+
+parquet_df.TODO
+
 #Beware of the differences of sort and orderby and sortWithinPartitions
 
 # COMMAND ----------
 
 # aggregate functions (min, max, avg, sum)
+# 
 # more options: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.GroupedData.html
 
 display(parquet_df.agg(
@@ -75,29 +75,40 @@ display(parquet_df.agg(
     F.sum(parquet_df.id)
 ))
 
+# Describe command
+#parquet_df.describe().display()
+
 # COMMAND ----------
 
-
+# Schema definition functions
 # withColumn, cast, lit functions
-#Add new columns and check the data types of the new cols
+# Add new columns and check the data types of the new cols
 parquet_df.withColumn('simple_string', F.lit("Constant_with_string")).withColumn('date', F.lit(datetime.datetime.now())).withColumn('str_date', F.col('date').cast('string')).printSchema()
 
 # COMMAND ----------
 
 # Challenge
-# Playing with Nulls
-# .na method
-# dropna(subset=cols) --> optional
-# fill(value, col) --> col optional, datatype eqaulity
+# Data quality topics
+# Handling missing values
+# .na function is used for missing values
+# .fill(value, col) --> filling missing values with default value
+# dropna(subset=cols) --> dropping missing values
 
 
+# Check for null values on salary columns
 #parquet_df.select("salary").where('salary is null').display()
-#parquet_df.select("gender").display()
+
+# Check gender values
+#parquet_df.select("gender").distinct().display()
+
+# na/dropna in action
 #parquet_df.na.replace("", None).dropna(subset="gender").display()
 
 # Try fill to use some default values
+# hint use: df.na.fill()
 #TODO
-parquet_df.select("salary").na.fill(0).where("salary = 0").count()
+
+#parquet_df.select("salary").na.fill(0).where("salary = 0").count()
 
 
 
@@ -131,9 +142,6 @@ parquet_df.select("country", "last_name", "salary").withColumn("rank", F.rank().
 # TODO count parquet_df only unique rows
 # TODO count distinct country element
 
-number_of_rows = parquet_df.count()
-number_distinct_rows = parquet_df.dropDuplicates().count()
-number_distinct_country_rows = parquet_df.dropDuplicates(['country']).count()
 # 3 different numbers what we get
 print(number_of_rows)
 print(number_distinct_rows)
@@ -157,16 +165,17 @@ print(number_distinct_country_rows)
 #collect --> put dataframe into a list (with Row object)! 
 #Warning it could kill your cluster (CPU heavy operation)
 #Very handy operation
-#select the user from Finland articles 
-country_list = parquet_df.where(F.col('country') == F.lit('Finland')).collect()
+#select the user from a country and transform to a list: 
 
-type(country_list)
-country_list
+country_list = parquet_df.where(# TODO).collect()
 
-# Row object element, why is more/better than simple list? Make a loop for seeing the difference. Hint --> columns:
+#type(country_list)
+#country_list
+
+# Row object element, why is better than simple list? Make a loop for seeing the difference. Hint --> columns:
+# 
+#for e in country_list:
 # TODO
-for e in country_list:
-  print(e.first_name)
 
 
 
@@ -254,6 +263,223 @@ joined_df.explain(mode="formatted")
 # MAGIC
 # MAGIC - Try to write/save out the joined_df with inner join. What's happened? How to solve it?
 # MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Performance comparison - Native Spark Function vs UDF 
+
+# COMMAND ----------
+
+# Prepare some data for the native spark function and udf function comparison
+# Exampl get data programmaticaly and use it
+import requests
+import os
+import shutil
+
+# Step 1: download the list of URLs
+list_url = "https://raw.githubusercontent.com/toddwschneider/nyc-taxi-data/master/setup_files/raw_data_urls.txt"
+response = requests.get(list_url)
+urls = response.text.splitlines()
+
+# Step 2: target directory (Unity Catalog Volume)
+target_dir = "/Volumes/workspace/default/raw_data/taxi-pq/"
+# Clear the target folder before creating it
+if os.path.exists(target_dir):
+    shutil.rmtree(target_dir)
+os.makedirs(target_dir, exist_ok=True)
+
+# Step 3: download only the first 3 files
+for url in urls[:3]:
+    if not url.strip():
+        continue
+
+    filename = url.split("/")[-1]
+    filepath = os.path.join(target_dir, filename)
+    
+    print(f"Downloading {url} → {filepath}")
+    
+    r = requests.get(url, stream=True)
+    with open(filepath, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+
+print("Download complete!")
+
+# COMMAND ----------
+
+# MAGIC %fs
+# MAGIC ls /Volumes/workspace/default/raw_data/taxi-pq/
+
+# COMMAND ----------
+
+#Basic check for the dataset
+df_taxi = spark.read.format("parquet").load("/Volumes/workspace/default/raw_data/taxi-pq/")
+df_taxi.count()
+#df_taxi.display()
+
+# COMMAND ----------
+
+# Spark native function --> Check Performance UI and running time
+import pyspark.sql.functions as F
+
+spark_df = spark.read.format("parquet").load("/Volumes/workspace/default/raw_data/taxi-pq/")
+
+# Filtering rows
+spark_df = spark_df.where("year(Trip_Pickup_DateTime) = 2009")
+
+# Native spark formula (functions) for taxi travel duration
+duration_expr = F.expr("(unix_timestamp(Trip_Dropoff_DateTime) - unix_timestamp(Trip_Pickup_DateTime)) / 60")
+
+spark_df = spark_df.withColumn("duration_in_mins", duration_expr)
+
+# Lets roll
+spark_df.select("duration_in_mins").describe().display()
+
+# COMMAND ----------
+
+# Spark UDF function --> Check Performance UI and running time
+from pyspark.sql.types import DoubleType
+import pyspark.sql.functions as F
+from datetime import datetime, timedelta
+
+# Define UDF function for taxi travel duration
+@F.udf(returnType=DoubleType())
+def get_trip_duration(dropoff_datetime: datetime, pickup_datetime: datetime):
+    delta = dropoff_datetime - pickup_datetime
+    return delta.total_seconds() / 60.0
+
+
+df = spark.read.format("parquet").load("/Volumes/workspace/default/raw_data/taxi-pq/")
+
+# Filtering rows
+df = df.where("year(Trip_Pickup_DateTime) = 2009")
+
+# Adopt the UDF function
+df = df.withColumn(
+    "duration_in_mins",
+    get_trip_duration(
+        F.to_timestamp("Trip_Dropoff_DateTime"),
+        F.to_timestamp("Trip_Pickup_DateTime")
+    )
+)
+
+# Lets roll
+df.select("duration_in_mins").describe().display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Delta Lake (Delta Parquet)
+# MAGIC
+# MAGIC Delta Lake is a Spark table with built-in reliability and performance optimizations.
+# MAGIC
+# MAGIC You can read and write data stored in Delta Lake using the same familiar Apache Spark SQL batch and streaming APIs you use to work with Hive tables or DBFS directories. Delta Lake provides the following functionality:<br><br>
+# MAGIC
+# MAGIC * <b>ACID transactions</b> - Multiple writers can simultaneously modify a data set and see consistent views.
+# MAGIC * <b>DELETES/UPDATES/UPSERTS</b> - Writers can modify a data set without interfering with jobs reading the data set.
+# MAGIC * <b>Automatic file management</b> - Data access speeds up by organizing data into large files that can be read efficiently.
+# MAGIC * <b>Statistics and data skipping</b> - Reads are 10-100x faster when statistics are tracked about the data in each file, allowing Delta to avoid reading irrelevant information.
+# MAGIC * <b>Default file type</b> - is delta from the 8.0 Runtime Enviroment!
+# MAGIC * Delta LiveTables
+# MAGIC * Delta Autoloader
+# MAGIC
+# MAGIC *docs: https://delta.io/*
+
+# COMMAND ----------
+
+# helper function for folder cleanup
+import os
+
+def ensure_empty_folder(path):
+    if os.path.exists(path):
+        dbutils.fs.rm(path, True)
+    dbutils.fs.mkdirs(path)
+
+ensure_empty_folder('/Volumes/workspace/default/raw_data/taxi-delta/')
+
+# COMMAND ----------
+
+# Delta parquet / delta / databricks delta
+# Write out in delta format the earlier dataframe.
+
+parquet_df = spark.read.format("parquet").load("/Volumes/workspace/default/raw_data/taxi-pq/")
+
+parquet_df.write.format("delta").mode("overwrite").save('/Volumes/workspace/default/raw_data/taxi-delta/')
+
+# COMMAND ----------
+
+
+display(dbutils.fs.ls(f'/Volumes/workspace/default/raw_data/taxi-delta/'))
+
+# COMMAND ----------
+
+#Read the delta table - temp view for sql command
+delta_df = spark.read.format("delta").load(f'/Volumes/workspace/default/raw_data/taxi-delta/')
+# For the sql API create temp view
+delta_df.createOrReplaceTempView("delta_parquet")
+
+# COMMAND ----------
+
+# Challenge
+# Lets make some ACID transaction (update, delete)
+# There are several way to use --> can use anyone
+#delta_df.select("vendor_name").distinct().display()
+#delta_df.where("vendor_name = 'VTS' and Passenger_Count = 0").display()
+delta_df.where("vendor_name = 'DDS' and Passenger_Count = 0").display()
+
+
+
+# COMMAND ----------
+
+#1: Delete
+# TODO
+spark.sql("DELETE FROM delta_parquet WHERE vendor_name = 'VTS' AND Passenger_Count = 0")
+
+# COMMAND ----------
+
+#2: Update
+# TODO
+spark.sql("UPDATE delta_parquet set Passenger_Count = -1 WHERE vendor_name = 'DDS' AND Passenger_Count = 0")
+
+# COMMAND ----------
+
+# Check the records which altered
+
+
+spark.sql("SELECT * FROM delta_parquet WHERE Passenger_Count = -1").show()
+
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **HW**
+# MAGIC - Check and try the upsert operation
+# MAGIC - Check the python api on acid operations
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##Timetravel function in Delta
+
+# COMMAND ----------
+
+# Check the Timetravel 
+spark.sql(f"DESCRIBE HISTORY delta.`/Volumes/workspace/default/raw_data/taxi-delta/`").display()
+
+# COMMAND ----------
+
+# Set back to the earlier version
+spark.sql(f"RESTORE TABLE delta.`/Volumes/workspace/default/raw_data/taxi-delta/` TO VERSION AS OF 0").display()
+
+# COMMAND ----------
+
+# Challenge
+# Check the earlier modified records
+spark.sql("SELECT * FROM delta_parquet WHERE Passenger_Count = -1").show()
+
 
 # COMMAND ----------
 
@@ -386,104 +612,6 @@ parted_df.where("number = 98765 and part=5").display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Delta Lake (Delta Parquet)
-# MAGIC
-# MAGIC Delta Lake is a Spark table with built-in reliability and performance optimizations.
-# MAGIC
-# MAGIC You can read and write data stored in Delta Lake using the same familiar Apache Spark SQL batch and streaming APIs you use to work with Hive tables or DBFS directories. Delta Lake provides the following functionality:<br><br>
-# MAGIC
-# MAGIC * <b>ACID transactions</b> - Multiple writers can simultaneously modify a data set and see consistent views.
-# MAGIC * <b>DELETES/UPDATES/UPSERTS</b> - Writers can modify a data set without interfering with jobs reading the data set.
-# MAGIC * <b>Automatic file management</b> - Data access speeds up by organizing data into large files that can be read efficiently.
-# MAGIC * <b>Statistics and data skipping</b> - Reads are 10-100x faster when statistics are tracked about the data in each file, allowing Delta to avoid reading irrelevant information.
-# MAGIC * <b>Default file type</b> - is delta from the 8.0 Runtime Enviroment!
-# MAGIC * Delta LiveTables
-# MAGIC * Delta Autoloader
-# MAGIC
-# MAGIC *docs: https://delta.io/*
-
-# COMMAND ----------
-
-# Delta parquet / delta / databricks delta
-# Write out in delta format the earlier dataframe. Only different is the format and the location
-parted_df.write.mode("append").format("delta").partitionBy("part").save(f'/Volumes/{delta_parquet.replace(".", "/")}')
-
-# COMMAND ----------
-
-
-display(dbutils.fs.ls(f'/Volumes/{delta_parquet.replace(".", "/")}'))
-
-# COMMAND ----------
-
-#Read the delta table - temp view for sql command
-delta_df = spark.read.format("delta").load(f'/Volumes/{delta_parquet.replace(".", "/")}')
-# For the sql API
-delta_df.createOrReplaceTempView("delta_parquet")
-
-# COMMAND ----------
-
-# Challenge
-# Lets make some ACID transaction (update, delete)
-# There are several way to use --> can use anyone
-
-# COMMAND ----------
-
-#1: Delete
-# TODO
-spark.sql("DELETE FROM delta_parquet WHERE number = 98765")
-
-# COMMAND ----------
-
-#2: Update
-# TODO
-spark.sql("UPDATE delta_parquet set number = -2 where number = 1")
-
-# COMMAND ----------
-
-# Check the records which altered
-
-
-spark.sql("SELECT * FROM delta_parquet WHERE number = 1").show()
-
-
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC **HW**
-# MAGIC - Check and try the upsert operation
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ##Timetravel function in Delta
-
-# COMMAND ----------
-
-# Check the Timetravel 
-spark.sql(f"DESCRIBE HISTORY delta.`/Volumes/{delta_parquet.replace('.', '/')}`").display()
-
-# COMMAND ----------
-
-# Set back to the earlier version
-spark.sql(f"RESTORE TABLE delta.`/Volumes/{delta_parquet.replace('.', '/')}` TO VERSION AS OF 0").display()
-
-# COMMAND ----------
-
-# Challenge
-# Check the earlier deleted records
-# TODO
-spark.sql("SELECT * FROM delta_parquet WHERE number = 98765").show()
-
-# COMMAND ----------
-
-# Challenge
-# Check the earlier updated records
-# TODO
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ###Tuning and Optimzation
 # MAGIC
 
@@ -574,8 +702,12 @@ spark.sql("SELECT * FROM delta_parquet WHERE number = 98765").show()
 
 # COMMAND ----------
 
+spark.sql("SHOW SCHEMAS").display()
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC Extra cells
+# MAGIC Extra dataframe ops..
 
 # COMMAND ----------
 
