@@ -35,16 +35,13 @@ from pyspark.sql.window import Window
 # Use your own path
 parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/Lab_2-userdata1.parquet')
 
+
 # COMMAND ----------
 
-# Challenge
+# Challenge - TODO
 # Check the schema of the datafrme
-
 # count the dataframe to get some pict about the data
-
-
 # Display some selected columns and filter on the dataframe and limit it to 20 rows
-
 
 
 # COMMAND ----------
@@ -54,11 +51,10 @@ parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/
 
 # COMMAND ----------
 
-# Challenge
+# Challenge - TODO
 # Show how many records by country, descreasing order
 # Question: What is Finland's ranking in this order? (Not the count value itself)
 
-parquet_df.TODO
 
 #Beware of the differences of sort and orderby and sortWithinPartitions
 
@@ -87,7 +83,7 @@ parquet_df.withColumn('simple_string', F.lit("Constant_with_string")).withColumn
 
 # COMMAND ----------
 
-# Challenge
+# Challenge - TODO
 # Data quality topics
 # Handling missing values
 # .na function is used for missing values
@@ -96,19 +92,17 @@ parquet_df.withColumn('simple_string', F.lit("Constant_with_string")).withColumn
 
 
 # Check for null values on salary columns
-#parquet_df.select("salary").where('salary is null').display()
+#parquet_df.select("salary").where('salary is null').count()
 
 # Check gender values
 #parquet_df.select("gender").distinct().display()
 
 # na/dropna in action
-#parquet_df.na.replace("", None).dropna(subset="gender").display()
+#parquet_df.na.replace("", None).dropna(subset="gender").select("gender").distinct().display()
 
 # Try fill to use some default values
 # hint use: df.na.fill()
 #TODO
-
-#parquet_df.select("salary").na.fill(0).where("salary = 0").count()
 
 
 
@@ -321,7 +315,7 @@ df_taxi.count()
 
 # COMMAND ----------
 
-# Spark native function --> Check Performance UI and running time
+# Spark native function --> Check Performance UI/Spark UI and running time
 import pyspark.sql.functions as F
 
 spark_df = spark.read.format("parquet").load("/Volumes/workspace/default/raw_data/taxi-pq/")
@@ -339,7 +333,7 @@ spark_df.select("duration_in_mins").describe().display()
 
 # COMMAND ----------
 
-# Spark UDF function --> Check Performance UI and running time
+# Spark UDF function --> Check Performance UI/Spark UI and running time
 from pyspark.sql.types import DoubleType
 import pyspark.sql.functions as F
 from datetime import datetime, timedelta
@@ -382,7 +376,7 @@ df.select("duration_in_mins").describe().display()
 # MAGIC * <b>Automatic file management</b> - Data access speeds up by organizing data into large files that can be read efficiently.
 # MAGIC * <b>Statistics and data skipping</b> - Reads are 10-100x faster when statistics are tracked about the data in each file, allowing Delta to avoid reading irrelevant information.
 # MAGIC * <b>Default file type</b> - is delta from the 8.0 Runtime Enviroment!
-# MAGIC * Delta LiveTables
+# MAGIC * Delta LiveTables - Lakehouse Declarative Pipeline
 # MAGIC * Delta Autoloader
 # MAGIC
 # MAGIC *docs: https://delta.io/*
@@ -435,13 +429,13 @@ delta_df.where("vendor_name = 'DDS' and Passenger_Count = 0").display()
 
 #1: Delete
 # TODO
-spark.sql("DELETE FROM delta_parquet WHERE vendor_name = 'VTS' AND Passenger_Count = 0")
+
 
 # COMMAND ----------
 
 #2: Update
 # TODO
-spark.sql("UPDATE delta_parquet set Passenger_Count = -1 WHERE vendor_name = 'DDS' AND Passenger_Count = 0")
+
 
 # COMMAND ----------
 
@@ -478,8 +472,7 @@ spark.sql(f"RESTORE TABLE delta.`/Volumes/workspace/default/raw_data/taxi-delta/
 
 # Challenge
 # Check the earlier modified records
-spark.sql("SELECT * FROM delta_parquet WHERE Passenger_Count = -1").show()
-
+#TODO
 
 # COMMAND ----------
 
@@ -488,70 +481,25 @@ spark.sql("SELECT * FROM delta_parquet WHERE Passenger_Count = -1").show()
 
 # COMMAND ----------
 
-# Prepartion cell
-# Unity path
-partition_parquet = 'workspace.default.partition_parquet'
-delta_parquet = 'workspace.default.delta_parquet'
-delta_parquet_small = 'workspace.default.delta_parquet_small'
-
-print(partition_parquet)
-print(delta_parquet)
-print(delta_parquet_small)
-
-
+ensure_empty_folder('/Volumes/workspace/default/raw_data/taxi-delta-partition/')
+ensure_empty_folder('/Volumes/workspace/default/raw_data/taxi-delta-partitionby/')
 
 # COMMAND ----------
 
-# Prepartion cell
-# Clear folders if already exists
-
-spark.sql(f"DROP VOLUME IF EXISTS {delta_parquet}")
-spark.sql(f"DROP VOLUME IF EXISTS {delta_parquet_small}")
-spark.sql(f"DROP VOLUME IF EXISTS {partition_parquet}")
-
-# COMMAND ----------
-
-# Prepartion cell
-# To create the practice folder for reusing purposes anytime
-spark.sql(f"CREATE VOLUME IF NOT EXISTS {partition_parquet}")
-spark.sql(f"CREATE VOLUME IF NOT EXISTS {delta_parquet}")
-spark.sql(f"CREATE VOLUME IF NOT EXISTS {delta_parquet_small}")
-
-# COMMAND ----------
-
-# Prepartion cell
-# Check the folders
-spark.sql('SHOW VOLUMES IN workspace.default').show()
-
-# COMMAND ----------
-
-#Repartition - coalesce, 
+#Repartition - coalesce and others
 #PartitionBy - store (performance) -- (Perhaps OneCluster node there is no differences but it is important in the real world!)
 
-# Create testing dataframe
-#Lets create a df
-#original range: 1000000
-from pyspark.sql.functions import *
+partition_df = spark.read.format("delta").load(f'/Volumes/workspace/default/raw_data/taxi-delta/')
 
-big_df = spark.range(100_000_000).toDF("number")
-
-# Enrich some extra columns --> low cardinality cols which is good candidate for partitioning
-second_df = big_df.withColumn("part", (col("number") % 10).cast("Integer")).withColumn("timestamp", current_timestamp())
-
-second_df.limit(1).display()
+#Check the data
+partition_df.display()
 
 # COMMAND ----------
 
-#Case 1: No partition - default configuration
-#Write out the data second_df with simple method
+# Case 1: No partition - default configuration
 # Use the Unity Catalog volume path as required: /Volumes/<catalog>/<schema>/<volume> -- DBFS 
-second_df.write.format("parquet").mode("overwrite").save(f'/Volumes/{delta_parquet_small.replace(".", "/")}')
-
-# COMMAND ----------
-
-# We got 8 parquet files - 8 cores
-# Each file around less than 1 MB --> not sooo bad but many times could be suboptimal
-display(dbutils.fs.ls(f'/Volumes/{delta_parquet_small.replace(".", "/")}'))
+# Investigate the files and sizes
+display(dbutils.fs.ls(f'/Volumes/workspace/default/raw_data/taxi-delta/'))
 
 # COMMAND ----------
 
@@ -564,12 +512,17 @@ display(dbutils.fs.ls(f'/Volumes/{delta_parquet_small.replace(".", "/")}'))
 # COMMAND ----------
 
 #Case 2: Change the partition number
-#Notice that the write speed affected!
-second_df.repartition(1).write.format("parquet").mode("overwrite").save(f'/Volumes/{delta_parquet_small.replace(".", "/")}')
+#Notice that the write speed affected or not
+#Question: repartition number depends on the number of cores?
+# repartition or coalesce? What is the key difference?
+# repartition is a shuffle operation and coalesce is not. Repartition is used to increase or decrease the number of partitions. Coalesce is used to decrease the number of partitions.
+# change the number of partitions!
+# TODO
+partition_df.repartition(8).write.mode("overwrite").save('/Volumes/workspace/default/raw_data/taxi-delta-partition/')
 
 # COMMAND ----------
 
-display(dbutils.fs.ls(f'/Volumes/{delta_parquet_small.replace(".", "/")}'))
+display(dbutils.fs.ls('/Volumes/workspace/default/raw_data/taxi-delta-partition/'))
 
 # COMMAND ----------
 
@@ -580,34 +533,37 @@ display(dbutils.fs.ls(f'/Volumes/{delta_parquet_small.replace(".", "/")}'))
 # COMMAND ----------
 
 #Case 3: Set PartitionBy
+# change the partition col(s)! Watch the cardinality!
+# TODO
+partition_df.write.mode("overwrite").partitionBy("vendor_name").save('/Volumes/workspace/default/raw_data/taxi-delta-partitionby')
 
-second_df.write.mode("overwrite").format("parquet").partitionBy("part").save(f'/Volumes/{partition_parquet.replace(".", "/")}')
 
 
 # COMMAND ----------
 
 # Check file level
-display(dbutils.fs.ls(f'/Volumes/{partition_parquet.replace(".", "/")}'))
-#display(dbutils.fs.ls(partition_parquet+"part=0"))
+display(dbutils.fs.ls('/Volumes/workspace/default/raw_data/taxi-delta-partitionby'))
 
 # COMMAND ----------
 
 #⚡⚡⚡⚡⚡Lets check some query performance!⚡⚡⚡⚡⚡
-parted_df = spark.read.format("parquet").load(f'/Volumes/{partition_parquet.replace(".", "/")}')
+repartition_df = spark.read.load('/Volumes/workspace/default/raw_data/taxi-delta-partition')
+partitionby_df = spark.read.format("delta").load('/Volumes/workspace/default/raw_data/taxi-delta-partitionby')
 
 # COMMAND ----------
 
 # Challenge
 # Normal query - without partition column --> Compare running time
-second_df.where("number = 98765").display()
+repartition_df.where("vendor_name = 'VTS' AND Passenger_Count = 0").display()
 
 
 # COMMAND ----------
 
 # Challenge
 # Normal query - with partition column
+# Analyze the performance UI / Spark UI
 # TODO
-parted_df.where("number = 98765 and part=5").display()
+partitionby_df.where()
 
 # COMMAND ----------
 
@@ -617,92 +573,123 @@ parted_df.where("number = 98765 and part=5").display()
 
 # COMMAND ----------
 
-# Technique 1
-# Storage level
-# Small files Optimizer/Vacuum --> Delta Lake
-
-# OPTIMIZE the delta table
-# spark.sql(f"OPTIMIZE delta.`{delta_parquet}`").display()
-# spark.conf.set('spark.databricks.delta.retentionDurationCheck.enabled', 'false')
-
-# Enable Z order (Delta Lake)
-# How to store/sort inside the partition the data --> using frequently used column(s)
-
-# spark.sql("OPTIMIZE table_name ZORDER BY (column_name)")
-
-# Lets check python api the sql command
-# Eliminate the not used parquet file and fragments
-# spark.sql(f"""VACUUM delta.`{delta_parquet}` RETAIN 00 HOURS""")
-
-# or even simplier if config for the table the autooptimze :
-# https://medium.com/@tamaghna.banerjee/delta-lake-optimization-using-auto-optimize-c300baf297d6
-
-# COMMAND ----------
-
-# Technique 2
-# Code level
-# - Cache dataframes which using more than once (and complicated or big or take long computation time)
-# from pyspark.sql import functions as F
-# cache_df1 = spark.range(1*10_000_000).toDF("id").withColumn("square", F.col("id")**2)
-# cache_df1.printSchema()
-# cache_df1.cache() >> [NOT_SUPPORTED_WITH_SERVERLESS] PERSIST TABLE is not supported on serverless compute. SQLSTATE: 0A000
-# cache_df1.count()
-# or can check the delta cache option: https://medium.com/@omkarspatil2611/databricks-optimization-technique-delta-cache-52ac6fe22db4
-
-
-# cache_df1.count()
+# MAGIC %md
+# MAGIC
+# MAGIC ### Technique 1
+# MAGIC **Storage level**
+# MAGIC
+# MAGIC - Small files Optimizer/Vacuum → Delta Lake
+# MAGIC
+# MAGIC - OPTIMIZE the delta table  
+# MAGIC   `spark.sql(f"OPTIMIZE delta.`{delta_parquet}`").display()`
+# MAGIC
+# MAGIC - `spark.conf.set('spark.databricks.delta.retentionDurationCheck.enabled', 'false')`
+# MAGIC
+# MAGIC - Enable Z order (Delta Lake)  
+# MAGIC   How to store/sort inside the partition the data → using frequently used column(s)
+# MAGIC
+# MAGIC - `spark.sql("OPTIMIZE table_name ZORDER BY (column_name)")`
+# MAGIC
+# MAGIC - Lets check python api the sql command  
+# MAGIC   Eliminate the not used parquet file and fragments  
+# MAGIC   `spark.sql(f"""VACUUM delta.`{delta_parquet}` RETAIN 00 HOURS""")`
+# MAGIC
+# MAGIC - Or even simpler if config for the table the autooptimze:  
+# MAGIC   [Delta Lake Optimization using Auto Optimize](https://medium.com/@tamaghna.banerjee/delta-lake-optimization-using-auto-optimize-c300baf297d6)
+# MAGIC
+# MAGIC - [Liquid Clustering: the latest strategy offered by Databricks](https://docs.databricks.com/aws/en/delta/clustering) --> but this is table level
+# MAGIC
 
 # COMMAND ----------
 
-# Technique 3
-# - Partitioning <--> Bucketing
-# Bucketing can reduce or avoid shuffle some cases like join
-
-# print(spark.conf.get("spark.sql.sources.bucketing.enabled"))
-
-# example: 
-# df.write\
-# .bucketBy(32, 'joining_key') \  # number of buckets --> depends on size, bucketing key
-# .sortBy('date_created') \ # somer order need
-# .saveAsTable('bucketed', format='parquet')
-
-# COMMAND ----------
-
-# Technique 4
-# Several Join types
-# Broadcast Hash Join
-# Reduce Shuffle, boost up performance
-# Small dataset can be distributed all worker.
-
-#from pyspark.sql.functions import broadcast
-
-# Perform the join with broadcast
-# result_df = big_df.join(broadcast(small_df), "join_column")
-
-# Additional can set the broadcast spark config. Hint: Up to 100MB if we have quite strong workers
-# 20 Mb threshold --> spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 20 * 1024 * 1024)
+# MAGIC %md
+# MAGIC ### Technique 2: Caching DataFrames for Performance Optimization
+# MAGIC
+# MAGIC - **Cache DataFrames** that are used multiple times, are large, or require expensive computations.
+# MAGIC - Use `cache()` for Spark DataFrames.  
+# MAGIC   *Note: `cache()` is not supported on serverless compute.*
+# MAGIC - For Delta tables, consider enabling **Delta Cache** for further optimization.
+# MAGIC - [Reference: Databricks Optimization Technique - Delta Cache](https://medium.com/@omkarspatil2611/databricks-optimization-technique-delta-cache-52ac6fe22db4)
+# MAGIC
+# MAGIC **Example:**
+# MAGIC
+# MAGIC `from pyspark.sql import functions as F`
+# MAGIC
+# MAGIC `cache_df1 = spark.range(10_000_000).toDF("id").withColumn("square", F.col("id")**2)`
+# MAGIC
+# MAGIC `cache_df1.cache()`
+# MAGIC
+# MAGIC `cache_df1.count()`
 
 # COMMAND ----------
 
-# AQE is especially useful in these scenarios:
-
-# Complex queries with multiple joins, aggregations, or window functions.
-# Situations where you experience data skew.
-# Large datasets with imbalanced partition sizes.
-
-# All in ALL you can switch anytime
-
-# spark.conf.set("spark.sql.adaptive.enabled", "true")
-
-# https://spark.apache.org/docs/latest/sql-performance-tuning.html
-
-# https://medium.com/@manoj.kdas37/how-to-optimize-your-apache-spark-jobs-top-10-approaches-and-best-practices-for-performance-tuning-4630ae864f52
-
-
+# MAGIC %md
+# MAGIC
 
 # COMMAND ----------
 
-spark.sql("SHOW SCHEMAS").display()
+# MAGIC %md
+# MAGIC ### Technique 3: Join Optimization
+# MAGIC
+# MAGIC ### Join Types
+# MAGIC - **Broadcast Hash Join:**  
+# MAGIC   - Reduces shuffle and boosts performance.
+# MAGIC   - Small dataset can be distributed to all worker nodes.
+# MAGIC
+# MAGIC #### Example: Broadcast Join in PySpark
+# MAGIC python
+# MAGIC from pyspark.sql.functions import broadcast
+# MAGIC
+# MAGIC Perform the join with broadcast
+# MAGIC - `result_df = big_df.join(broadcast(small_df), "join_column")`
+# MAGIC
+# MAGIC
+# MAGIC #### Spark Configuration
+# MAGIC - You can set the broadcast threshold (e.g., up to 100MB if you have strong workers):
+# MAGIC - %python
+# MAGIC - `spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 20 * 1024 * 1024)`  # 20 MB threshold
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Adaptive Query Execution (AQE) in Spark
+# MAGIC
+# MAGIC AQE is especially useful in these scenarios:
+# MAGIC
+# MAGIC - **Complex queries** with multiple joins, aggregations, or window functions
+# MAGIC - **Data skew** situations
+# MAGIC - **Large datasets** with imbalanced partition sizes
+# MAGIC
+# MAGIC ---
+# MAGIC
+# MAGIC **Switch AQE on/off anytime:**
+# MAGIC python
+# MAGIC spark.conf.set("spark.sql.adaptive.enabled", "true")
+# MAGIC
+# MAGIC
+# MAGIC ---
+# MAGIC
+# MAGIC **Further Reading:**
+# MAGIC - [Spark SQL Performance Tuning](https://spark.apache.org/docs/latest/sql-performance-tuning.html)
+# MAGIC - [Top 10 Spark Optimization Approaches](https://medium.com/@manoj.kdas37/how-to-optimize-your-apache-spark-jobs-top-10-approaches-and-best-practices-for-performance-tuning-4630ae864f52)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## ETL Task: Taxi Dataset Cleaning
+# MAGIC
+# MAGIC Perform the following data cleaning operations on the taxi dataset:
+# MAGIC
+# MAGIC - **Vendor Name Validation:** Exclude records where `vendor_name` is null.
+# MAGIC - **Passenger Count Filtering:** Remove outliers in the `Passenger_Count` field. Only allow values between 1 and 10 (inclusive). Ensure the column is of integer type.
+# MAGIC - **Datetime Casting:** Convert all datetime fields to the `timestamp` data type.
+# MAGIC - **Geolocation Precision:** Round `Longitude` and `Latitude` fields to 4 decimal places to prevent downstream issues.
+# MAGIC - **Payment Type Normalization:** Standardize the `Payment_type` field to a consistent case (e.g., all lowercase).
+# MAGIC - **Duplicate Removal:** Eliminate duplicate rows to ensure data integrity.
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 
@@ -736,3 +723,17 @@ parquet_df.select("first_name", "last_name").withColumn("full_name", F.concat_ws
 parquet_df.select("ip_address").withColumn("mod_ip_address", F.regexp_replace("ip_address", "\.", "-")).display()
 
 
+
+# COMMAND ----------
+
+# Technique 3
+# - Partitioning <--> Bucketing
+# Bucketing can reduce or avoid shuffle some cases like join
+
+# print(spark.conf.get("spark.sql.sources.bucketing.enabled"))
+
+# example: 
+# df.write\
+# .bucketBy(32, 'joining_key') \  # number of buckets --> depends on size, bucketing key
+# .sortBy('date_created') \ # somer order need
+# .saveAsTable('bucketed', format='parquet')
