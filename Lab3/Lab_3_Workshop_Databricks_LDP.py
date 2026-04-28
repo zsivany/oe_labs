@@ -15,7 +15,7 @@
 # MAGIC * Key termonologies
 # MAGIC * GUI check
 # MAGIC * MiniUsecase - Medallion with Lakeflow
-# MAGIC     * create pipeline (Consists: 4x pipeline codes, 1x notebook cell for data generation)
+# MAGIC     * create pipeline (Consists: 4x pipeline files, 1x notebook cell for data generation)
 # MAGIC     * run, check the results
 # MAGIC     * rerun
 # MAGIC * Playing with Genie and SQL Editor
@@ -96,9 +96,24 @@
 # MAGIC #Mini Usecase
 # MAGIC ##Steps:
 # MAGIC   * Emulate the data source with Notebook cell
-# MAGIC   * Create medallion layers via Lakeflow Pipelines (DLT) (bronze, silver, gold):
+# MAGIC   * Create medallion layers via Lakeflow Pipelines (old terminology: DLT) (bronze, silver, gold):
 # MAGIC   * Run it and test
 # MAGIC
+
+# COMMAND ----------
+
+import os
+
+def ensure_empty_folder(path):
+    # Create parent directories if not exist
+    parent = os.path.dirname(path.rstrip('/'))
+    if parent and not os.path.exists(parent):
+        dbutils.fs.mkdirs(parent)
+    if os.path.exists(path):
+        dbutils.fs.rm(path, True)
+    dbutils.fs.mkdirs(path)
+
+    ensure_empty_folder("/Volumes/workspace/default/raw_data/customers")
 
 # COMMAND ----------
 
@@ -137,7 +152,7 @@ operations = OrderedDict([("APPEND", 0.5),("DELETE", 0.1),("UPDATE", 0.3),(None,
 fake_operation = F.udf(lambda:fake.random_elements(elements=operations, length=1)[0])
 fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
 
-number_of_customer = 7664
+number_of_customer = 6767
 df = spark.range(0, number_of_customer).repartition(20)
 
 df = df.withColumn("id", fake_id())
@@ -158,7 +173,7 @@ print(f"{number_of_customer} customers are generated. Process done..")
 # Check the data
 
 df = spark.read.format("json").load(volume_folder+"/customers")
-display(df)
+df.count()
 
 # COMMAND ----------
 
