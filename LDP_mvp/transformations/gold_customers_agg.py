@@ -3,12 +3,12 @@ from pyspark import pipelines as dp
 from pyspark.sql.functions import *
 
 @dp.table(
-  name = "customers_agg",
+  name = "customers_agg1",
   comment = "Aggregated customer records"
 )
 def customers_history_agg():
   return (
-    spark.read.table("silver_customers")
+    spark.read.table("silver_customers1")
       .groupBy("id")
       .agg(
           count("address").alias("address_count"),

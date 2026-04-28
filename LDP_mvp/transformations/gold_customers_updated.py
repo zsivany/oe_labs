@@ -3,11 +3,11 @@ from pyspark import pipelines as dp
 from pyspark.sql.functions import *
 
 @dp.table(
-  name = "customers_updated",
+  name = "customers_updated1",
   comment = "Only the updated customers"
 )
 def customers_updated():
   return (
-    spark.read.table("silver_customers").where("operation = 'UPDATE'")
+    spark.read.table("silver_customers1").where("operation = 'UPDATE'")
 
   )
