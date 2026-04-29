@@ -164,6 +164,7 @@ df = df.withColumn("email", fake_email())
 df = df.withColumn("address", fake_address())
 df = df.withColumn("operation", fake_operation())
 df_customers = df.withColumn("operation_date", fake_date())
+df_customers = df_customers.withColumn("load_ts", F.current_timestamp())
 print(df_customers.count())
 df_customers.repartition(20).write.format("json").mode("append").save(volume_folder+"/customers")
   
