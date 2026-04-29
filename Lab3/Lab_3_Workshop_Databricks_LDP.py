@@ -94,6 +94,7 @@
 
 # MAGIC %md
 # MAGIC #Mini Usecase
+# MAGIC ![image_1777449282252.png](./image_1777449282252.png "image_1777449282252.png")
 # MAGIC ##Steps:
 # MAGIC   * Emulate the data source with Notebook cell
 # MAGIC   * Create medallion layers via Lakeflow Pipelines (old terminology: DLT) (bronze, silver, gold):
@@ -102,6 +103,7 @@
 
 # COMMAND ----------
 
+# RUN ONLY ONCE!
 import os
 
 def ensure_empty_folder(path):
@@ -152,7 +154,7 @@ operations = OrderedDict([("APPEND", 0.5),("DELETE", 0.1),("UPDATE", 0.3),(None,
 fake_operation = F.udf(lambda:fake.random_elements(elements=operations, length=1)[0])
 fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
 
-number_of_customer = 6767
+number_of_customer = 5555
 df = spark.range(0, number_of_customer).repartition(20)
 
 df = df.withColumn("id", fake_id())
@@ -174,102 +176,6 @@ print(f"{number_of_customer} customers are generated. Process done..")
 
 df = spark.read.format("json").load(volume_folder+"/customers")
 df.count()
-
-# COMMAND ----------
-
-#PIPELINE Code snippets
-
-# COMMAND ----------
-
-#bronze_customers.py
-from pyspark import pipelines as dp
-from pyspark.sql.functions import *
-
-# Source config
-path = "/Volumes/workspace/default/raw_data/customers/"
-
-# Create the target bronze table
-dp.create_streaming_table(name = "bronze_customers", 
-                          comment = "New customer data incrementally ingested from cloud object storage landing zone")
-
-# Create an Append Flow to ingest the raw data into the bronze table
-@dp.append_flow(
-  target = "bronze_customers",
-  name = "bronze_customers_ingest_flow"
-)
-# readStream function can track automatically the loaded files
-def bronze_customers_ingest_flow():
-  return (
-      spark.readStream
-          .format("cloudFiles")
-          .option("cloudFiles.format", "json")
-          .option("cloudFiles.inferColumnTypes", "true")
-          .load(f"{path}")
-  )
-
-# COMMAND ----------
-
-#silver_customers.py
-from pyspark import pipelines as dp
-from pyspark.sql.functions import *
-
-# Create the target silver table
-dp.create_streaming_table(
-  name = "silver_customers",
-  expect_all_or_drop = {"no_rescued_data": "_rescued_data IS NULL",
-                        "valid_id": "id IS NOT NULL",
-                        "valid_operation": "operation IN ('APPEND', 'DELETE', 'UPDATE')"}
-  )
-
-# Create an Append Flow to ingest the raw data into the silver table
-@dp.append_flow(
-  target = "silver_customers",
-  name = "customers_clean_flow"
-)
-
-def customers_clean_flow():
-  return (
-      spark.readStream.table("bronze_customers")
-          .select("address", "email", "id", "firstname", "lastname", "operation", "operation_date", "load_ts","_rescued_data")
-  )
-
-# COMMAND ----------
-
-#gold_customers_agg.py
-from pyspark import pipelines as dp
-from pyspark.sql.functions import *
-
-@dp.table(
-  name = "customers_agg",
-  comment = "Aggregated customer records"
-)
-def customers_history_agg():
-  return (
-    spark.read.table("silver_customers")
-      .groupBy("id")
-      .agg(
-          count("address").alias("address_count"),
-          count("email").alias("email_count"),
-          count("firstname").alias("firstname_count"),
-          count("lastname").alias("lastname_count")
-      )
-  )
-
-# COMMAND ----------
-
-#gold_customers_updated.py
-from pyspark import pipelines as dp
-from pyspark.sql.functions import *
-
-@dp.table(
-  name = "customers_updated",
-  comment = "Only the updated customers"
-)
-def customers_updated():
-  return (
-    spark.read.table("silver_customers").where("operation = 'UPDATE'")
-
-  )
 
 # COMMAND ----------
 
