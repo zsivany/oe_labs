@@ -44,7 +44,7 @@
 # MAGIC
 # MAGIC ### **Declarative Frameworks**
 # MAGIC
-# MAGIC **DLT – Delta Live Tables ←→ Lakeflow Declarative Pipelines**
+# MAGIC **DLT – Delta Live Tables ←→ LDP Lakeflow (Spark) Declarative Pipelines**
 # MAGIC
 # MAGIC **Delta Live Tables (DLT)**  
 # MAGIC *A declarative framework for building reliable, maintainable, and testable data processing pipelines.*
@@ -95,7 +95,7 @@
 # MAGIC %md
 # MAGIC #Mini Usecase
 # MAGIC ![image_1777449282252.png](./image_1777449282252.png "image_1777449282252.png")
-# MAGIC ##Steps:
+# MAGIC ## Steps:
 # MAGIC   * Emulate the data source with Notebook cell
 # MAGIC   * Create medallion layers via Lakeflow Pipelines (old terminology: DLT) (bronze, silver, gold):
 # MAGIC   * Run it and test
@@ -155,7 +155,8 @@ fake_operation = F.udf(lambda:fake.random_elements(elements=operations, length=1
 fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
 
 number_of_customer = 5555
-df = spark.range(0, number_of_customer).repartition(20)
+#optional performance step
+df = spark.range(0, number_of_customer).repartition(2)
 
 df = df.withColumn("id", fake_id())
 df = df.withColumn("firstname", fake_firstname())
