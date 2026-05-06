@@ -1,8 +1,8 @@
 #gold_customers_agg.py
 from pyspark import pipelines as dp
-from pyspark.sql.functions import *
+from pyspark.sql.functions import count
 
-@dp.table(
+@dp.materialized_view(
   name = "customers_agg",
   comment = "Aggregated customer records"
 )

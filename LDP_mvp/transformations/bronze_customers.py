@@ -1,6 +1,5 @@
 #bronze_customers.py
 from pyspark import pipelines as dp
-from pyspark.sql.functions import *
 
 # Source config
 path = "/Volumes/workspace/default/raw_data/customers/"

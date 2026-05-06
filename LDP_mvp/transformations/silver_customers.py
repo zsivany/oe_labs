@@ -1,6 +1,5 @@
 #silver_customers.py
 from pyspark import pipelines as dp
-from pyspark.sql.functions import *
 
 # Create the target silver table
 dp.create_streaming_table(

@@ -1,8 +1,7 @@
 #gold_customers_updated.py
 from pyspark import pipelines as dp
-from pyspark.sql.functions import *
 
-@dp.table(
+@dp.materialized_view(
   name = "customers_updated",
   comment = "Only the updated customers"
 )
