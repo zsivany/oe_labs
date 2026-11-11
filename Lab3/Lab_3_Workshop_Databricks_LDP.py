@@ -154,7 +154,7 @@ operations = OrderedDict([("APPEND", 0.5),("DELETE", 0.1),("UPDATE", 0.3),(None,
 fake_operation = F.udf(lambda:fake.random_elements(elements=operations, length=1)[0])
 fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
 
-number_of_customer = 5555
+number_of_customer = 1000
 #optional performance step
 df = spark.range(0, number_of_customer).repartition(2)
 

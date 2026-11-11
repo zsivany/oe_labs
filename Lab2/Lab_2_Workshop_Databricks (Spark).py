@@ -33,15 +33,20 @@ from pyspark.sql.window import Window
 # Use Moodle or Git: https://github.com/zsivany/oe_labs/blob/main/Lab2/Lab_2-userdata1.parquet 
 # Alternative link:  https://github.com/zsivany/oe_labs/raw/refs/heads/main/Lab2/Lab_2-userdata1.parquet
 # Use your own path
-parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/Lab_2-userdata1.parquet')
+parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/Lab_2-userdata1 (3).parquet')
 
 
 # COMMAND ----------
 
 # Challenge - TODO
-# Check the schema of the datafrme
+# Check the schema of the dataframe
 # count the dataframe to get some pict about the data
 # Display some selected columns and filter on the dataframe and limit it to 20 rows
+#parquet_df.display()
+
+#parquet_df.count()
+
+parquet_df.limit(25).display()
 
 
 # COMMAND ----------
@@ -54,7 +59,7 @@ parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/
 # Challenge - TODO
 # Show how many records by country, descreasing order
 # Question: What is Finland's ranking in this order? (Not the count value itself)
-
+parquet_df.select("country").groupBy("country").count().orderBy("count", ascending=False).display()
 
 #Beware of the differences of sort and orderby and sortWithinPartitions
 
@@ -64,22 +69,22 @@ parquet_df = spark.read.format("parquet").load('/Volumes/workspace/default/user/
 # 
 # more options: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.GroupedData.html
 
-display(parquet_df.agg(
-    F.min(parquet_df.id),
-    F.max(parquet_df.id),
-    F.avg(parquet_df.id),
-    F.sum(parquet_df.id)
-))
+# display(parquet_df.agg(
+#     F.min(parquet_df.id),
+#     F.max(parquet_df.id),
+#     F.avg(parquet_df.id),
+#     F.sum(parquet_df.id)
+# ))
 
 # Describe command
-#parquet_df.describe().display()
+parquet_df.describe().display()
 
 # COMMAND ----------
 
 # Schema definition functions
 # withColumn, cast, lit functions
 # Add new columns and check the data types of the new cols
-parquet_df.withColumn('simple_string', F.lit("Constant_with_string")).withColumn('date', F.lit(datetime.datetime.now())).withColumn('str_date', F.col('date').cast('string')).printSchema()
+parquet_df.withColumn('simple_string', F.lit("Constant_with_string")).withColumn('date', F.lit(datetime.datetime.now())).withColumn('str_date', F.col('date').cast('string')).display()
 
 # COMMAND ----------
 
@@ -103,7 +108,7 @@ parquet_df.withColumn('simple_string', F.lit("Constant_with_string")).withColumn
 # Try fill to use some default values
 # hint use: df.na.fill()
 #TODO
-
+parquet_df.na.fill(0, "salary").select("salary").where("salary is null").display()
 
 
 # COMMAND ----------
@@ -132,10 +137,11 @@ parquet_df.select("country", "last_name", "salary").withColumn("rank", F.rank().
 # Dropduplicates: Remove the duplicates from the dataframe
 # Notice: it should be assign to the "new" dataframe the result if would like to use later
 # TODO count parquet_df 
-
+number_of_rows = parquet_df.count()
 # TODO count parquet_df only unique rows
+number_distinct_rows = parquet_df.dropDuplicates().count()
 # TODO count distinct country element
-
+number_distinct_country_rows = parquet_df.dropDuplicates(["country"]).count()
 # 3 different numbers what we get
 print(number_of_rows)
 print(number_distinct_rows)
@@ -161,15 +167,15 @@ print(number_distinct_country_rows)
 #Very handy operation
 #select the user from a country and transform to a list: 
 
-country_list = parquet_df.where(# TODO).collect()
+country_list = parquet_df.where("country = 'Finland'").collect()
 
 #type(country_list)
-#country_list
+country_list
 
 # Row object element, why is better than simple list? Make a loop for seeing the difference. Hint --> columns:
 # 
-#for e in country_list:
-# TODO
+for e in country_list:
+    print(e.first_name)
 
 
 
@@ -265,6 +271,15 @@ joined_df.explain(mode="formatted")
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC -- Create a new volume using SQL
+# MAGIC -- Volumes must be created with SQL commands, not Python/dbutils
+# MAGIC
+# MAGIC CREATE VOLUME IF NOT EXISTS workspace.default.raw_data
+# MAGIC COMMENT 'Folder for taxi data';
+
+# COMMAND ----------
+
 # Prepare some data for the native spark function and udf function comparison
 # Exampl get data programmaticaly and use it
 import requests
@@ -310,8 +325,8 @@ print("Download complete!")
 
 #Basic check for the dataset
 df_taxi = spark.read.format("parquet").load("/Volumes/workspace/default/raw_data/taxi-pq/")
-df_taxi.count()
-#df_taxi.display()
+#df_taxi.count()
+df_taxi.display()
 
 # COMMAND ----------
 
@@ -383,15 +398,20 @@ df.select("duration_in_mins").describe().display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Cell 36
 # helper function for folder cleanup
 import os
 
 def ensure_empty_folder(path):
+    # Create parent directories if not exist
+    parent = os.path.dirname(path.rstrip('/'))
+    if parent and not os.path.exists(parent):
+        dbutils.fs.mkdirs(parent)
     if os.path.exists(path):
         dbutils.fs.rm(path, True)
     dbutils.fs.mkdirs(path)
 
-ensure_empty_folder('/Volumes/workspace/default/raw_data/taxi-delta/')
+#ensure_empty_folder('/Volumes/workspace/default/raw_data/taxi-delta/')
 
 # COMMAND ----------
 
@@ -429,20 +449,20 @@ delta_df.where("vendor_name = 'DDS' and Passenger_Count = 0").display()
 
 #1: Delete
 # TODO
-
+spark.sql("DELETE FROM delta_parquet WHERE vendor_name = 'VTS' AND Passenger_Count = 0")
 
 # COMMAND ----------
 
 #2: Update
 # TODO
-
+spark.sql("UPDATE delta_parquet SET Passenger_Count = -1 WHERE vendor_name = 'DDS' AND Passenger_Count = 0")
 
 # COMMAND ----------
 
 # Check the records which altered
 
 
-spark.sql("SELECT * FROM delta_parquet WHERE Passenger_Count = -1").show()
+spark.sql("SELECT * FROM delta_parquet WHERE Passenger_Count = -1").display()
 
 
 
@@ -518,7 +538,7 @@ display(dbutils.fs.ls(f'/Volumes/workspace/default/raw_data/taxi-delta/'))
 # repartition is a shuffle operation and coalesce is not. Repartition is used to increase or decrease the number of partitions. Coalesce is used to decrease the number of partitions.
 # change the number of partitions!
 # TODO
-partition_df.repartition(8).write.mode("overwrite").save('/Volumes/workspace/default/raw_data/taxi-delta-partition/')
+partition_df.repartition(6).write.mode("overwrite").save('/Volumes/workspace/default/raw_data/taxi-delta-partition/')
 
 # COMMAND ----------
 
@@ -563,7 +583,7 @@ repartition_df.where("vendor_name = 'VTS' AND Passenger_Count = 0").display()
 # Normal query - with partition column
 # Analyze the performance UI / Spark UI
 # TODO
-partitionby_df.where()
+partitionby_df.where("vendor_name = 'VTS' AND Passenger_Count = 0").display()
 
 # COMMAND ----------
 
