@@ -1,11 +1,11 @@
 #bronze_customers.py
 from pyspark import pipelines as dp
 
-# Source config
+# Source path
 path = "/Volumes/workspace/default/raw_data/customers/"
 
 # Create the target bronze table
-dp.create_streaming_table(name = "bronze_customers", 
+dp.create_streaming_table(name = "bronze_customers",
                           comment = "New customer data incrementally ingested from cloud object storage landing zone")
 
 # Create an Append Flow to ingest the raw data into the bronze table
@@ -14,7 +14,7 @@ dp.create_streaming_table(name = "bronze_customers",
   name = "bronze_customers_ingest_flow"
 )
 # readStream function can track automatically the loaded files
-def bronze_customers_ingest_flow():
+def bronze_customers():
   return (
       spark.readStream
           .format("cloudFiles")
