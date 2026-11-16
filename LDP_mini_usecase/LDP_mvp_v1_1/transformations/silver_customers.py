@@ -2,21 +2,21 @@
 from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
-# Create the target silver table
-dp.create_streaming_table(
-  name = "silver_customers",
-  expect_all_or_drop = {"no_rescued_data": "_rescued_data IS NULL",
-                        "valid_id": "id IS NOT NULL",
-                        "valid_category": "customer_category IN ('RED', 'GREEN', 'BLUE')"}
-  )
-
-# Create an Append Flow to ingest the raw data into the silver table
-@dp.append_flow(
-  target = "silver_customers",
-  name = "customers_clean_flow"
+@dp.table(
+  name = "silver_customers"
 )
+@dp.expect(
+  "registration_date_not_too_old",
+  "registration_date >= DATE '2020-01-01'"
+)
+@dp.expect_all_or_drop({
+    "no_rescued_data": "_rescued_data IS NULL",
+    "valid_id": "id IS NOT NULL",
+    "valid_category": "customer_category IN ('RED', 'GREEN', 'BLUE')"
+})
 
-def customers_clean_flow():
+# AppendFlow implicity created
+def silver_customers():
   return (
       spark.readStream.table("bronze_customers")
           .select("id",

@@ -709,10 +709,6 @@ partitionby_df.where("vendor_name = 'VTS' AND Passenger_Count = 0").display()
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC Extra dataframe ops..
 
